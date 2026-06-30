@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import DiagnosticMaturite from '../components/DiagnosticMaturite.jsx';
+---
+
+<Base
+  title="Diagnostic de maturité digitale — Symbotis"
+  description="Évaluez la maturité digitale de votre organisation sur 6 axes en 20 minutes. Score, radar et recommandations prioritaires."
+>
+  <section class="section">
+    <div class="container diagnostic-shell">
+      {/* Étape 4 : passera en client:load pour l'hydratation interactive */}
+      <DiagnosticMaturite />
+    </div>
+  </section>
+
+  <style>
+    .diagnostic-shell {
+      max-width: 760px;
+    }
+  </style>
+</Base>

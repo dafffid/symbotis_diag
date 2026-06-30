@@ -1,0 +1,175 @@
+---
+import '../styles/brand.css';
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Symbotis — Conseil en transformation digitale par l’IA',
+  description = 'Symbotis accompagne votre transformation digitale par l’IA. Diagnostic de maturité digitale, ROI garanti 30–90 jours.',
+} = Astro.props;
+
+const nav = [
+  { href: '/', label: 'Accueil' },
+  { href: '/diagnostic-maturite-digitale', label: 'Diagnostic' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <!-- Inter (300 → 800) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    />
+
+    <!-- Tabler Icons (classes ti ti-* utilisées par le diagnostic) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css"
+    />
+
+    <!-- Font Awesome 6.4 Free (chrome du site) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="site-nav">
+      <nav class="container site-nav__inner">
+        <a class="site-nav__brand" href="/">
+          <i class="fa-solid fa-brain" aria-hidden="true"></i>
+          <span>Symbotis</span>
+        </a>
+        <ul class="site-nav__links">
+          {
+            nav.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class:list={['site-nav__link', { 'is-active': path === item.href }]}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <div class="site-footer__brand">
+          <i class="fa-solid fa-brain" aria-hidden="true"></i> Symbotis
+        </div>
+        <p class="site-footer__tag">
+          Conseil en transformation digitale par l’IA · ROI garanti 30–90 jours
+        </p>
+        <p class="site-footer__legal">
+          © {new Date().getFullYear()} Symbotis — Saint-Bautiste. Tous droits réservés.
+        </p>
+      </div>
+    </footer>
+
+    <style>
+      /* ---- Nav sticky (dégradé navy) ---- */
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(90deg, var(--brand-navy-700), var(--brand-navy));
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      }
+      .site-nav__inner {
+        height: var(--nav-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .site-nav__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--white);
+        font-weight: 700;
+        font-size: 1.15rem;
+        letter-spacing: 0.01em;
+      }
+      .site-nav__brand:hover {
+        text-decoration: none;
+      }
+      .site-nav__brand i {
+        color: var(--brand-orange);
+      }
+      .site-nav__links {
+        display: flex;
+        gap: 1.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .site-nav__link {
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 500;
+        font-size: 0.95rem;
+        padding: 0.4rem 0;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s ease, border-color 0.15s ease;
+      }
+      .site-nav__link:hover {
+        color: var(--white);
+        text-decoration: none;
+      }
+      .site-nav__link.is-active {
+        color: var(--white);
+        border-bottom-color: var(--brand-orange);
+      }
+
+      /* ---- Footer navy ---- */
+      .site-footer {
+        background: var(--brand-navy);
+        color: rgba(255, 255, 255, 0.78);
+        padding: 3rem 0;
+        margin-top: 4rem;
+      }
+      .site-footer__inner {
+        text-align: center;
+      }
+      .site-footer__brand {
+        color: var(--white);
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      .site-footer__brand i {
+        color: var(--brand-orange);
+      }
+      .site-footer__tag {
+        margin: 0.6rem 0 0.2rem;
+        font-size: 0.9rem;
+      }
+      .site-footer__legal {
+        margin: 0;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+    </style>
+  </body>
+</html>
