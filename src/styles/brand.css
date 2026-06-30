@@ -110,6 +110,15 @@ a:hover {
   text-decoration: underline;
 }
 
+/* ---- Champs de saisie : focus orange (bordure + ring 20%) ---- */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--brand-orange) !important;
+  box-shadow: 0 0 0 3px rgba(243, 148, 72, 0.2);
+}
+
 /* ---- Helpers de mise en page ---- */
 .container {
   width: 100%;

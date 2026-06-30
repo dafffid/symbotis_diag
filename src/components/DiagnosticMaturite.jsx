@@ -169,13 +169,56 @@ function RadarChart({ scores, size = 280 }) {
   return <canvas ref={canvasRef} style={{ width: size, height: size, display: "block", margin: "0 auto" }} />;
 }
 
+// Champ commentaire libre : une ligne visible, hauteur auto-extensible, aucune limite de texte.
+function CommentField({ value, onChange }) {
+  const ref = useRef(null);
+  const autosize = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
+  useEffect(() => { autosize(ref.current); }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      placeholder="Commentaire (optionnel)"
+      aria-label="Commentaire libre"
+      onChange={(e) => { onChange(e.target.value); autosize(e.target); }}
+      style={{
+        marginTop: 10,
+        width: "100%",
+        boxSizing: "border-box",
+        fontFamily: "inherit",
+        fontSize: 13,
+        lineHeight: 1.5,
+        color: "var(--text-secondary)",
+        background: "var(--surface-1)",
+        border: "0.5px solid var(--border)",
+        borderRadius: "var(--radius)",
+        padding: "8px 10px",
+        resize: "none",
+        overflow: "hidden",
+        minHeight: 36,
+      }}
+    />
+  );
+}
+
 export default function App() {
   const [answers, setAnswers] = useState({});
+  const [comments, setComments] = useState({});
   const [activeAxis, setActiveAxis] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   const setAnswer = (axisId, qIdx, value) => {
     setAnswers(prev => ({ ...prev, [`${axisId}-${qIdx}`]: value }));
+  };
+
+  const setComment = (axisId, qIdx, value) => {
+    setComments(prev => ({ ...prev, [`${axisId}-${qIdx}`]: value }));
   };
 
   const axisScores = useMemo(() => {
@@ -295,6 +338,16 @@ export default function App() {
   const openActionPlan = () => {
     const top3 = sortedAxes.slice(0, 3);
     const subject = "Plan d'action 90 jours — Diagnostic de maturité digitale";
+
+    // Commentaires libres saisis (le cas échéant)
+    const filledComments = [];
+    axes.forEach((a) => {
+      a.questions.forEach((q, qi) => {
+        const c = (comments[`${a.id}-${qi}`] || "").trim();
+        if (c) filledComments.push(`- ${a.label} (Q${qi + 1}) : ${c}`);
+      });
+    });
+
     const body = [
       "Bonjour,",
       "",
@@ -305,6 +358,7 @@ export default function App() {
       "",
       "Scores par axe :",
       ...axes.map((a) => `- ${a.label} : ${axisScores[a.id].toFixed(1)}/4`),
+      ...(filledComments.length ? ["", "Commentaires :", ...filledComments] : []),
       "",
       "Merci de me recontacter.",
     ].join("\n");
@@ -436,6 +490,10 @@ export default function App() {
                 </button>
               ))}
             </div>
+            <CommentField
+              value={comments[`${ax.id}-${qi}`] || ""}
+              onChange={(v) => setComment(ax.id, qi, v)}
+            />
           </div>
         );
       })}
@@ -450,7 +508,15 @@ export default function App() {
             Suivant <i className="ti ti-arrow-right" style={{ marginLeft: 4 }} />
           </button>
         ) : (
-          <button onClick={() => setShowResults(true)}
+          <button
+            onClick={() => {
+              if (answeredCount === totalQuestions) {
+                setShowWarning(false);
+                setShowResults(true);
+              } else {
+                setShowWarning(true);
+              }
+            }}
             style={{ background: answeredCount === totalQuestions ? "var(--fill-accent)" : undefined,
               color: answeredCount === totalQuestions ? "var(--on-accent)" : undefined,
               border: answeredCount === totalQuestions ? "none" : undefined }}>
@@ -458,6 +524,17 @@ export default function App() {
           </button>
         )}
       </div>
+
+      {showWarning && answeredCount < totalQuestions && (
+        <div
+          role="alert"
+          style={{ marginTop: 14, padding: "10px 14px", borderRadius: "var(--radius)",
+            background: "var(--bg-warning)", color: "var(--text-warning)", fontSize: 13, fontWeight: 500,
+            display: "flex", alignItems: "center", gap: 8 }}>
+          <i className="ti ti-alert-triangle" aria-hidden="true" />
+          Répondez à toutes les questions pour voir vos résultats — il en reste {totalQuestions - answeredCount} sur {totalQuestions}.
+        </div>
+      )}
     </div>
   );
 }
