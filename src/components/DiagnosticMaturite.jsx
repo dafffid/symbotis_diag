@@ -128,7 +128,7 @@ function RadarChart({ scores, size = 280 }) {
 
       const lx = cx + (r + 28) * Math.cos(angle);
       const ly = cy + (r + 28) * Math.sin(angle);
-      ctx.font = "500 10px system-ui, sans-serif";
+      ctx.font = "500 10px Inter, system-ui, sans-serif";
       ctx.fillStyle = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -145,9 +145,9 @@ function RadarChart({ scores, size = 280 }) {
       const y = cy + r * v * Math.sin(angle);
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
-    ctx.fillStyle = "rgba(46,117,182,0.15)";
+    ctx.fillStyle = "rgba(243,148,72,0.15)";
     ctx.fill();
-    ctx.strokeStyle = "#2E75B6";
+    ctx.strokeStyle = "#F39448";
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -158,9 +158,9 @@ function RadarChart({ scores, size = 280 }) {
       const y = cy + r * v * Math.sin(angle);
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = "#2E75B6";
+      ctx.fillStyle = "#F39448";
       ctx.fill();
-      ctx.font = "bold 11px system-ui, sans-serif";
+      ctx.font = "bold 11px Inter, system-ui, sans-serif";
       ctx.fillStyle = isDark ? "#E2E8F0" : "#1B2A4A";
       ctx.fillText(vals[i].toFixed(1), x + 8, y - 8);
     }
@@ -202,7 +202,7 @@ export default function App() {
 
   if (showResults) {
     return (
-      <div style={{ fontFamily: "system-ui, sans-serif", maxWidth: 700, margin: "0 auto" }}>
+      <div style={{ fontFamily: "Inter, system-ui, sans-serif", maxWidth: 700, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 4 }}>Résultats du diagnostic</div>
@@ -272,7 +272,7 @@ export default function App() {
   const axAnswered = ax.questions.filter((_, qi) => answers[`${ax.id}-${qi}`] !== undefined).length;
 
   return (
-    <div style={{ fontFamily: "system-ui, sans-serif", maxWidth: 700, margin: "0 auto" }}>
+    <div style={{ fontFamily: "Inter, system-ui, sans-serif", maxWidth: 700, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <div>
           <div style={{ fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: "var(--text-muted)" }}>Symbotis — diagnostic de maturité digitale</div>
