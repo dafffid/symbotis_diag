@@ -1,0 +1,175 @@
+
+<h2 class="sr-only">Diagnostic de maturité digitale interactif avec 6 axes d'évaluation et radar chart</h2>
+<style>
+.dm-header { margin: 0 0 1.5rem; }
+.dm-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 4px; }
+.dm-title { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.dm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 1.5rem; }
+.dm-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+.dm-card-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.dm-card-title i { font-size: 18px; color: var(--color-text-secondary); }
+.dm-slider-row { display: flex; align-items: center; gap: 10px; }
+.dm-slider-row input[type=range] { flex: 1; }
+.dm-score { font-size: 16px; font-weight: 500; min-width: 28px; text-align: right; }
+.dm-levels { display: flex; justify-content: space-between; font-size: 10px; color: var(--color-text-tertiary); margin-top: 2px; }
+.dm-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 0 0 1.5rem; }
+.dm-metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; text-align: center; }
+.dm-metric-label { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 4px; }
+.dm-metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.dm-metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin: 4px 0 0; }
+.dm-radar { display: flex; justify-content: center; margin: 0 0 1.5rem; }
+.dm-recos { margin: 0; }
+.dm-reco { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin: 0 0 10px; }
+.dm-reco-head { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
+.dm-reco-priority { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: var(--border-radius-md); }
+.dm-reco-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.dm-reco-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin: 0; }
+.dm-actions { display: flex; gap: 8px; margin-top: 1.5rem; justify-content: center; }
+.dm-actions button { font-size: 13px; }
+</style>
+
+<div class="dm-header">
+  <p class="dm-label">Symbotis — audit 20 min</p>
+  <p class="dm-title">Diagnostic de maturité digitale</p>
+</div>
+
+<div class="dm-grid" id="sliders"></div>
+<div class="dm-summary" id="summary"></div>
+<div class="dm-radar"><canvas id="radar" width="340" height="340" role="img" aria-label="Radar chart de maturité digitale sur 6 axes"></canvas></div>
+<div id="recos" class="dm-recos"></div>
+<div class="dm-actions">
+  <button onclick="sendPrompt('Génère un rapport de maturité digitale PDF avec ces scores et recommandations')">Générer le rapport PDF <i class="ti ti-arrow-up-right" aria-hidden="true"></i></button>
+  <button onclick="sendPrompt('Propose un plan d\'action sur 90 jours basé sur ce diagnostic')">Plan d'action 90 jours <i class="ti ti-arrow-up-right" aria-hidden="true"></i></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const axes = [
+  { id: 'strat', icon: 'ti-target', label: 'Stratégie digitale', desc: 'Vision, roadmap, gouvernance', levels: ['Inexistant','Émergent','Structuré','Avancé','Leader'] },
+  { id: 'data', icon: 'ti-database', label: 'Data & analytics', desc: 'Collecte, qualité, exploitation', levels: ['Silos Excel','Centralisé','Analytics','Prédictif','IA native'] },
+  { id: 'process', icon: 'ti-refresh', label: 'Processus & automatisation', desc: 'Workflows, outils, efficacité', levels: ['Manuel','Partiellement digitalisé','Automatisé','Intelligent','Autonome'] },
+  { id: 'techno', icon: 'ti-cpu', label: 'Infrastructure & outils', desc: 'SI, cloud, intégrations', levels: ['Legacy','Modernisé','Cloud','API-first','Composable'] },
+  { id: 'people', icon: 'ti-users', label: 'Culture & compétences', desc: 'Adoption, formation, change', levels: ['Résistance','Sensibilisé','Formé','Data-driven','Innovation native'] },
+  { id: 'client', icon: 'ti-heart', label: 'Expérience client', desc: 'Canaux, personnalisation, feedback', levels: ['Offline','Multi-canal','Omnicanal','Personnalisé','Prédictif'] },
+];
+
+const scores = {};
+axes.forEach(a => scores[a.id] = 2);
+
+const grid = document.getElementById('sliders');
+axes.forEach(a => {
+  const card = document.createElement('div');
+  card.className = 'dm-card';
+  card.innerHTML = `
+    <div class="dm-card-title"><i class="ti ${a.icon}" aria-hidden="true"></i>${a.label}</div>
+    <div class="dm-slider-row">
+      <input type="range" min="0" max="4" step="1" value="2" id="s-${a.id}" aria-label="${a.label}">
+      <span class="dm-score" id="v-${a.id}">2</span>
+    </div>
+    <div class="dm-levels"><span>${a.levels[0]}</span><span>${a.levels[4]}</span></div>
+  `;
+  grid.appendChild(card);
+  card.querySelector('input').addEventListener('input', e => {
+    scores[a.id] = parseInt(e.target.value);
+    document.getElementById('v-'+a.id).textContent = e.target.value;
+    update();
+  });
+});
+
+const isDark = matchMedia('(prefers-color-scheme:dark)').matches;
+const radarChart = new Chart(document.getElementById('radar'), {
+  type: 'radar',
+  data: {
+    labels: axes.map(a => a.label),
+    datasets: [{
+      data: axes.map(a => scores[a.id]),
+      backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(59,130,246,0.1)',
+      borderColor: '#3B82F6',
+      borderWidth: 2,
+      pointBackgroundColor: '#3B82F6',
+      pointRadius: 4,
+    }]
+  },
+  options: {
+    responsive: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        min: 0, max: 4,
+        ticks: { stepSize: 1, display: false },
+        grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+        angleLines: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' },
+        pointLabels: { font: { size: 11 }, color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)' }
+      }
+    }
+  }
+});
+
+function getMaturityLevel(avg) {
+  if (avg < 1) return { label: 'Initial', color: 'danger' };
+  if (avg < 2) return { label: 'Émergent', color: 'warning' };
+  if (avg < 3) return { label: 'Structuré', color: 'info' };
+  if (avg < 3.7) return { label: 'Avancé', color: 'success' };
+  return { label: 'Leader', color: 'success' };
+}
+
+function getRecos(scores) {
+  const sorted = axes.map(a => ({ ...a, score: scores[a.id] })).sort((a,b) => a.score - b.score);
+  const recos = [];
+  sorted.slice(0, 3).forEach(a => {
+    const r = {
+      strat: { title: 'Définir une roadmap digitale', text: 'Atelier de cadrage stratégique : vision 12 mois, priorisation des cas d\'usage par impact/faisabilité, gouvernance et KPIs.' },
+      data: { title: 'Structurer la fondation data', text: 'Audit des sources de données, consolidation dans un référentiel unique, mise en place de dashboards décisionnels et premiers modèles analytiques.' },
+      process: { title: 'Automatiser les processus critiques', text: 'Cartographie des workflows manuels, identification des quick wins d\'automatisation (n8n, Zapier, scripts), déploiement en 30-60 jours.' },
+      techno: { title: 'Moderniser l\'infrastructure', text: 'Migration cloud progressive, mise en place d\'APIs pour connecter les outils, élimination des silos techniques.' },
+      people: { title: 'Accélérer l\'adoption', text: 'Programme de sensibilisation et formation, identification de champions internes, accompagnement au changement avec quick wins visibles.' },
+      client: { title: 'Digitaliser l\'expérience client', text: 'Unifier les canaux, mettre en place un CRM, déployer des outils de feedback et personnalisation basés sur la data client.' },
+    }[a.id];
+    recos.push({ ...r, score: a.score, priority: recos.length === 0 ? 'Priorité 1' : recos.length === 1 ? 'Priorité 2' : 'Priorité 3' });
+  });
+  return recos;
+}
+
+function update() {
+  radarChart.data.datasets[0].data = axes.map(a => scores[a.id]);
+  radarChart.update();
+
+  const vals = Object.values(scores);
+  const avg = vals.reduce((s,v) => s+v, 0) / vals.length;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const level = getMaturityLevel(avg);
+
+  document.getElementById('summary').innerHTML = `
+    <div class="dm-metric">
+      <p class="dm-metric-label">Score global</p>
+      <p class="dm-metric-value">${avg.toFixed(1)}/4</p>
+      <p class="dm-metric-sub" style="color: var(--color-text-${level.color})">${level.label}</p>
+    </div>
+    <div class="dm-metric">
+      <p class="dm-metric-label">Point fort</p>
+      <p class="dm-metric-value">${max}/4</p>
+      <p class="dm-metric-sub">${axes.find(a => scores[a.id] === max).label}</p>
+    </div>
+    <div class="dm-metric">
+      <p class="dm-metric-label">Axe prioritaire</p>
+      <p class="dm-metric-value">${min}/4</p>
+      <p class="dm-metric-sub">${axes.find(a => scores[a.id] === min).label}</p>
+    </div>
+  `;
+
+  const recos = getRecos(scores);
+  const colors = ['danger','warning','info'];
+  document.getElementById('recos').innerHTML = recos.map((r, i) => `
+    <div class="dm-reco">
+      <div class="dm-reco-head">
+        <span class="dm-reco-priority" style="background: var(--color-background-${colors[i]}); color: var(--color-text-${colors[i]})">${r.priority}</span>
+        <span class="dm-reco-title">${r.title}</span>
+      </div>
+      <p class="dm-reco-text">${r.text}</p>
+    </div>
+  `).join('');
+}
+
+update();
+</script>
