@@ -37,6 +37,40 @@
   /* ---- Ombres douces (jamais dures, jamais d'inner shadow) ---- */
   --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-cta: 0 8px 25px rgba(234, 88, 12, 0.3);
+
+  /* =========================================================
+     Tokens consommés par le composant React DiagnosticMaturite.
+     Ils ne sont définis nulle part dans le JSX : on les mappe
+     ici aux couleurs Symbotis → le diagnostic devient on-brand
+     sans modifier le JSX.
+     ========================================================= */
+
+  /* Textes (échelle slate) */
+  --text-primary: var(--slate-800);     /* titres, valeurs, libellés forts */
+  --text-secondary: var(--slate-600);   /* corps, descriptions */
+  --text-muted: var(--slate-400);       /* labels discrets, compteurs */
+
+  /* Accent chaud (orange marque) */
+  --text-accent: var(--brand-orange);   /* onglet actif, n° question, barre de progression */
+  --bg-accent: rgba(243, 148, 72, 0.12);/* fond de réponse sélectionnée, badge priorité 3 */
+  --border-accent: var(--brand-orange); /* bordure de réponse sélectionnée */
+  --fill-accent: var(--brand-orange-cta); /* fond du bouton « Voir les résultats » */
+  --on-accent: var(--white);            /* texte sur fond accent plein */
+
+  /* États sémantiques */
+  --text-danger: var(--brand-danger);   /* priorité 1 */
+  --bg-danger: #FDECEA;
+  --text-warning: #B45309;              /* priorité 2 — amber lisible (famille #FBBF24) */
+  --bg-warning: #FEF3C7;
+  --text-success: var(--brand-success); /* coche d'axe complété ✓ */
+
+  /* Surfaces & bordures */
+  --surface-1: var(--slate-100);        /* pistes, métriques, tags, encart info */
+  --surface-2: var(--white);            /* cartes question / reco */
+  --border: var(--slate-200);
+
+  /* Rayon générique du composant */
+  --radius: 8px;
 }
 
 /* ---- Reset léger ---- */
