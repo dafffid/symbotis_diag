@@ -200,6 +200,118 @@ export default function App() {
   const sortedAxes = useMemo(() =>
     [...axes].sort((a, b) => axisScores[a.id] - axisScores[b.id]), [axisScores]);
 
+  // --- Bouton « Générer le rapport PDF » : vrai PDF client-side (jsPDF) ---
+  const generatePdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 48;
+    let y = margin;
+
+    // En-tête
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(31, 42, 99); // navy #1F2A63
+    doc.setFontSize(22);
+    doc.text("Symbotis", margin, y);
+    doc.setTextColor(243, 148, 72); // orange #F39448
+    doc.setFontSize(13);
+    y += 20;
+    doc.text("Diagnostic de maturité digitale", margin, y);
+
+    // Score global + niveau
+    y += 36;
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.text(`Score global : ${globalScore.toFixed(1)}/4`, margin, y);
+    y += 18;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(71, 85, 105); // slate-600
+    doc.text(`Niveau de maturité : ${maturity.label}`, margin, y);
+
+    // Radar rasterisé depuis le <canvas>
+    const canvas = typeof document !== "undefined" ? document.querySelector("canvas") : null;
+    if (canvas) {
+      try {
+        const img = canvas.toDataURL("image/png");
+        const size = 200;
+        doc.addImage(img, "PNG", pageW - margin - size, margin + 4, size, size);
+      } catch (e) {
+        /* canvas tainted / indisponible : on garde le PDF texte */
+      }
+    }
+
+    // Scores par axe
+    y += 40;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text("Scores par axe", margin, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(71, 85, 105);
+    sortedAxes.forEach((ax) => {
+      y += 18;
+      doc.text(`${ax.label}`, margin, y);
+      doc.text(`${axisScores[ax.id].toFixed(1)}/4`, margin + 320, y, { align: "right" });
+    });
+
+    // Recommandations prioritaires
+    y += 34;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text("Recommandations prioritaires", margin, y);
+    sortedAxes.slice(0, 3).forEach((ax, i) => {
+      const r = recommendations[ax.id];
+      y += 22;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(243, 148, 72);
+      doc.text(`Priorité ${i + 1} — ${r.title}`, margin, y);
+      y += 15;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      const wrapped = doc.splitTextToSize(r.text, pageW - margin * 2);
+      doc.text(wrapped, margin, y);
+      y += wrapped.length * 13;
+    });
+
+    // Pied de page
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text(
+      "Symbotis — Conseil en transformation digitale par l'IA · ROI garanti 30–90 jours",
+      margin,
+      doc.internal.pageSize.getHeight() - 28
+    );
+
+    doc.save("diagnostic-maturite-symbotis.pdf");
+  };
+
+  // --- Bouton « Plan d'action 90 jours » : mailto pré-rempli (capture du lead) ---
+  const openActionPlan = () => {
+    const top3 = sortedAxes.slice(0, 3);
+    const subject = "Plan d'action 90 jours — Diagnostic de maturité digitale";
+    const body = [
+      "Bonjour,",
+      "",
+      `Suite à mon diagnostic de maturité digitale (score global ${globalScore.toFixed(1)}/4 — niveau ${maturity.label}), je souhaite échanger sur un plan d'action sur 90 jours.`,
+      "",
+      "Axes prioritaires :",
+      ...top3.map((ax, i) => `${i + 1}. ${ax.label} — ${axisScores[ax.id].toFixed(1)}/4`),
+      "",
+      "Scores par axe :",
+      ...axes.map((a) => `- ${a.label} : ${axisScores[a.id].toFixed(1)}/4`),
+      "",
+      "Merci de me recontacter.",
+    ].join("\n");
+    const mailto = `mailto:contact@symbotis.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+  };
+
   if (showResults) {
     return (
       <div style={{ fontFamily: "Inter, system-ui, sans-serif", maxWidth: 700, margin: "0 auto" }}>
@@ -257,10 +369,10 @@ export default function App() {
         })}
 
         <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 24 }}>
-          <button onClick={() => sendPrompt(`Génère un rapport PDF de maturité digitale avec ces scores : ${axes.map(a => `${a.label}: ${axisScores[a.id].toFixed(1)}`).join(', ')}`)}>
+          <button onClick={generatePdf}>
             Générer le rapport PDF <i className="ti ti-file-text" />
           </button>
-          <button onClick={() => sendPrompt(`Propose un plan d'action 90 jours basé sur ces scores : ${sortedAxes.slice(0,3).map(a => `${a.label} (${axisScores[a.id].toFixed(1)}/4)`).join(', ')}`)}>
+          <button onClick={openActionPlan}>
             Plan d'action 90 jours <i className="ti ti-arrow-up-right" />
           </button>
         </div>
