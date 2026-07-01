@@ -23,7 +23,8 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="description" content={description} />
     <title>{title}</title>
 
@@ -51,7 +52,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     <header class="site-nav">
       <nav class="container site-nav__inner">
         <a class="site-nav__brand" href="/">
-          <i class="fa-solid fa-brain" aria-hidden="true"></i>
+          <img class="site-nav__logo" src="/logo-symbotis.png" alt="Symbotis" width="32" height="39" />
           <span>Symbotis</span>
         </a>
         <ul class="site-nav__links">
@@ -78,7 +79,8 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     <footer class="site-footer">
       <div class="container site-footer__inner">
         <div class="site-footer__brand">
-          <i class="fa-solid fa-brain" aria-hidden="true"></i> Symbotis
+          <img class="site-footer__logo" src="/logo-symbotis.png" alt="Symbotis" width="26" height="31" />
+          <span>Symbotis</span>
         </div>
         <p class="site-footer__tag">
           Conseil en transformation digitale par l’IA · ROI garanti 30–90 jours
@@ -116,8 +118,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
       .site-nav__brand:hover {
         text-decoration: none;
       }
-      .site-nav__brand i {
-        color: var(--brand-orange);
+      .site-nav__logo {
+        height: 32px;
+        width: auto;
+        display: block;
       }
       .site-nav__links {
         display: flex;
@@ -154,12 +158,17 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
         text-align: center;
       }
       .site-footer__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
         color: var(--white);
         font-weight: 700;
         font-size: 1.1rem;
       }
-      .site-footer__brand i {
-        color: var(--brand-orange);
+      .site-footer__logo {
+        height: 26px;
+        width: auto;
+        display: block;
       }
       .site-footer__tag {
         margin: 0.6rem 0 0.2rem;
