@@ -1,4 +1,4 @@
-# Saint-Bautiste — Site Symbotis
+# Symbotis - Diagnostic Maturité Digitale
 
 Site vitrine **Symbotis** (conseil en transformation digitale par l’IA), construit
 avec [Astro](https://astro.build). La page phare est un **diagnostic de maturité
